@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NorCal Trip Countdown ✈️</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sky-top: #0a1628;
+      --sky-mid: #0e2a52;
+      --sky-glow: #1a4a8a;
+      --gold: #f0a830;
+      --gold-light: #ffd27a;
+      --white: #f5f0e8;
+      --muted: rgba(245,240,232,0.55);
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--sky-top);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--white);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Stars */
+    .stars {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    }
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: white;
+      animation: twinkle var(--d, 3s) ease-in-out infinite;
+      animation-delay: var(--dl, 0s);
+    }
+    @keyframes twinkle {
+      0%,100%{ opacity: var(--op, 0.6); transform: scale(1); }
+      50%{ opacity: 0.15; transform: scale(0.6); }
+    }
+
+    /* Horizon glow */
+    .glow {
+      position: fixed;
+      bottom: -60px; left: 50%; transform: translateX(-50%);
+      width: 900px; height: 300px;
+      background: radial-gradient(ellipse at center bottom, rgba(26,74,138,0.55) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* Golden Gate silhouette */
+    .gg-bridge {
+      position: fixed;
+      bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 900px;
+      pointer-events: none; z-index: 1;
+      opacity: 0.18;
+    }
+
+    /* Main content */
+    .container {
+      position: relative; z-index: 10;
+      text-align: center;
+      padding: 2rem 1.5rem;
+      width: 100%;
+      max-width: 680px;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.75rem;
+      font-weight: 400;
+    }
+
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2.2rem, 8vw, 4rem);
+      font-weight: 400;
+      line-height: 1.08;
+      margin-bottom: 0.4rem;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 60%, #e07b10 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 3rem;
+      font-weight: 300;
+    }
+
+    /* Countdown grid */
+    .countdown {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 2.5rem;
+    }
+
+    .unit {
+      background: rgba(255,255,255,0.04);
+      border: 0.5px solid rgba(240,168,48,0.25);
+      border-radius: 16px;
+      padding: 1.4rem 0.5rem 1rem;
+      backdrop-filter: blur(8px);
+      animation: fadeUp 0.6s ease forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    .unit:nth-child(1){ animation-delay: 0.1s; }
+    .unit:nth-child(2){ animation-delay: 0.2s; }
+    .unit:nth-child(3){ animation-delay: 0.3s; }
+    .unit:nth-child(4){ animation-delay: 0.4s; }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .num {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2.4rem, 9vw, 3.8rem);
+      font-weight: 400;
+      color: var(--gold-light);
+      line-height: 1;
+      display: block;
+      transition: color 0.3s;
+    }
+
+    .lbl {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 8px;
+      display: block;
+      font-weight: 400;
+    }
+
+    /* Progress bar */
+    .progress-wrap {
+      margin-bottom: 2.5rem;
+      animation: fadeUp 0.6s 0.5s ease forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      letter-spacing: 0.04em;
+    }
+    .progress-track {
+      height: 3px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 100%);
+      border-radius: 99px;
+      transition: width 0.8s ease;
+      width: 0%;
+    }
+
+    /* Footer detail */
+    .footer-detail {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      animation: fadeUp 0.6s 0.6s ease forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    .footer-detail span {
+      color: var(--gold);
+    }
+
+    /* Gone message */
+    .gone-msg {
+      display: none;
+      animation: fadeUp 0.6s ease forwards;
+    }
+    .gone-msg h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.5rem;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+    .gone-msg p {
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 420px) {
+      .countdown { gap: 8px; }
+      .unit { padding: 1rem 0.25rem 0.75rem; border-radius: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="glow"></div>
+
+<!-- Golden Gate SVG silhouette -->
+<svg class="gg-bridge" viewBox="0 0 900 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- water -->
+  <rect x="0" y="180" width="900" height="40" fill="white"/>
+  <!-- road deck -->
+  <rect x="0" y="160" width="900" height="8" fill="white"/>
+  <!-- left tower -->
+  <rect x="195" y="60" width="18" height="110" fill="white"/>
+  <!-- right tower -->
+  <rect x="687" y="60" width="18" height="110" fill="white"/>
+  <!-- left tower crossbar -->
+  <rect x="190" y="100" width="28" height="7" fill="white"/>
+  <rect x="190" y="130" width="28" height="7" fill="white"/>
+  <!-- right tower crossbar -->
+  <rect x="682" y="100" width="28" height="7" fill="white"/>
+  <rect x="682" y="130" width="28" height="7" fill="white"/>
+  <!-- main cables -->
+  <path d="M30 168 Q204 50 450 80 Q696 50 870 168" stroke="white" stroke-width="3" fill="none"/>
+  <!-- suspender lines (left span) -->
+  <line x1="220" y1="160" x2="240" y2="97" stroke="white" stroke-width="1"/>
+  <line x1="280" y1="160" x2="290" y2="83" stroke="white" stroke-width="1"/>
+  <line x1="340" y1="160" x2="340" y2="78" stroke="white" stroke-width="1"/>
+  <line x1="400" y1="160" x2="393" y2="79" stroke="white" stroke-width="1"/>
+  <line x1="450" y1="160" x2="450" y2="80" stroke="white" stroke-width="1"/>
+  <!-- suspender lines (right span) -->
+  <line x1="500" y1="160" x2="507" y2="79" stroke="white" stroke-width="1"/>
+  <line x1="560" y1="160" x2="560" y2="78" stroke="white" stroke-width="1"/>
+  <line x1="620" y1="160" x2="610" y2="83" stroke="white" stroke-width="1"/>
+  <line x1="680" y1="160" x2="660" y2="97" stroke="white" stroke-width="1"/>
+</svg>
+
+<div class="container">
+  <p class="eyebrow">✈ &nbsp; Trip Countdown</p>
+  <h1>Northern California</h1>
+  <p class="subtitle">Wheels up Monday, May 19 · 2:00 PM EST</p>
+
+  <div class="countdown">
+    <div class="unit"><span class="num" id="cd-days">--</span><span class="lbl">Days</span></div>
+    <div class="unit"><span class="num" id="cd-hours">--</span><span class="lbl">Hours</span></div>
+    <div class="unit"><span class="num" id="cd-mins">--</span><span class="lbl">Mins</span></div>
+    <div class="unit"><span class="num" id="cd-secs">--</span><span class="lbl">Secs</span></div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span>Today</span>
+      <span id="pct-label">calculating…</span>
+      <span>May 19</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+  </div>
+
+  <div class="footer-detail">
+    Departing from <span>Greenville, SC</span> &nbsp;→&nbsp; <span>NorCal</span>
+  </div>
+
+  <div class="gone-msg" id="gone-msg">
+    <h2>You're there! 🌉</h2>
+    <p>Enjoy every moment of Northern California.</p>
+  </div>
+</div>
+
+<script>
+  // Generate stars
+  const starsEl = document.getElementById('stars');
+  for(let i = 0; i < 120; i++){
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.2 + 0.5;
+    s.style.cssText = `
+      width:${size}px; height:${size}px;
+      top:${Math.random()*85}%;
+      left:${Math.random()*100}%;
+      --op:${Math.random()*0.5+0.2};
+      --d:${(Math.random()*3+2).toFixed(1)}s;
+      --dl:${(Math.random()*4).toFixed(1)}s;
+    `;
+    starsEl.appendChild(s);
+  }
+
+  // Countdown
+  const target = new Date('2026-05-19T14:00:00-04:00').getTime();
+  const tripLengthMs = 14 * 24 * 3600 * 1000;
+  const startRef = target - tripLengthMs;
+
+  function pad(n){ return String(n).padStart(2,'0'); }
+
+  function tick(){
+    const now = Date.now();
+    const diff = target - now;
+
+    if(diff <= 0){
+      ['cd-days','cd-hours','cd-mins','cd-secs'].forEach(id => document.getElementById(id).textContent = '00');
+      document.getElementById('progress-fill').style.width = '100%';
+      document.getElementById('pct-label').textContent = '100%';
+      document.getElementById('gone-msg').style.display = 'block';
+      return;
+    }
+
+    const totalSec = Math.floor(diff / 1000);
+    document.getElementById('cd-days').textContent  = pad(Math.floor(totalSec / 86400));
+    document.getElementById('cd-hours').textContent = pad(Math.floor((totalSec % 86400) / 3600));
+    document.getElementById('cd-mins').textContent  = pad(Math.floor((totalSec % 3600) / 60));
+    document.getElementById('cd-secs').textContent  = pad(totalSec % 60);
+
+    const pct = Math.min(100, Math.max(0, Math.round((now - startRef) / tripLengthMs * 100)));
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('pct-label').textContent = pct + '% there';
+
+    setTimeout(tick, 1000);
+  }
+
+  tick();
+</script>
+</body>
+</html>
